@@ -1,0 +1,169 @@
+@startuml Galaga_Architecture
+
+skinparam classAttributeIconSize 0
+skinparam monochrome true
+skinparam shadowing false
+
+
+package game {
+    abstract class Entite {
+        # x : double
+        # y : double
+        # largeur : double
+        # vitesse : double
+        + {abstract} update()
+        + {abstract} draw()
+        }
+       
+
+    class Game {
+        - score : int
+        - highScore : int
+        - enTransition : boolean
+        - numeroNiveauActuel : int
+        - gameOver : boolean
+        -timerGameOver:int
+        -enIntroduction: boolean
+        -timerIntro :int
+        -nomJoueur:String
+        -timerTransition:int
+        -messageTransition:String
+        + launch()
+        - update()
+        + draw()
+        - chargerNiveau(numero : int)
+        -verifierMortJoueur()
+        -gererCreationTirs()
+        +drawHUD()
+        -drawGameOver()
+        +chargerNiveau()
+        +recommencerPartie()
+    
+    }
+
+    class Formation {
+        - directionX : double
+        - vitesseFormation : double
+        - niveauActuel : int
+        + ajouterEnnemi(type, x, y)
+        + update()
+        + lancerAttaque()
+    }
+
+    abstract class VaisseauEnnemi {
+        # valeur : int
+        # etat : EtatEnnemi
+        # vitesseAttaque : double
+        + tirer() : Tir
+        + {abstract} draw()
+        + update()
+        -deplacer()
+    }
+
+    enum EtatEnnemi {
+        FORMATION
+        ATTAQUE
+        RETOUR
+        MORT
+    }
+
+    class Bee extends VaisseauEnnemi{
+        +draw()
+    }
+    class Butterfly extends VaisseauEnnemi{
+        -directionAttaque : int
+        +draw()
+        +update()
+    }
+    class Moth extends VaisseauEnnemi {
+        - enDescente : boolean
+        +draw()
+        +update()
+       
+    }
+
+    class Tir extends Entite {
+        - direction : int
+        + horsEcran() : boolean
+        + update()
+        +draw()
+    }
+
+    package actors {
+        class Player extends game.Entite {
+            - vies : int
+            + perdreVie()
+            + gagnerVie()
+            +update()
+            +draw()
+        }
+    }
+
+    class Sky {
+        - starsX : double[]
+        - starsY : double[]
+        - nombreEtoiles :int
+        + dessiner()
+        + update()
+    }
+
+    class Sprite {
+        - pixels : Color[][]
+        - PALETTE : Map
+        -width:int
+        -height:int
+        + draw(x, y, totalWidth)
+        - chargerSprite(fileName)
+    }
+
+    class ScoreManager {
+        - scoreActuel : int
+        - highScore : int
+        + ajouterPoints(points)
+        -sauvegarderHighScore()
+        - chargerHighScore()
+    }
+
+    class Collision {
+        + {static} seTouchent(a, b) : boolean
+        + {static} traiterTirsJoueur()
+        + {static} traiterTirsEnnemis()
+        +{static} traiterKamikaze()
+    }
+
+    class GestionnaireTirs {
+        + ajouterTir(tir)
+        + update()
+        +vider()
+        +taille()
+        + draw()
+    }
+
+
+
+
+
+
+Game *-- Player : possède
+Game *-- Formation : possède
+Game *-- Sky : possède
+Game *-- ScoreManager : possède
+Game *-- GestionnaireTirs : possède
+
+' Game utilise la classe utilitaire pour les calculs
+Game ..> Collision : utilise
+
+' Logique interne des conteneurs
+Formation - "*" VaisseauEnnemi : contient
+GestionnaireTirs o-- "*" Tir : gère
+
+' États et Génération
+VaisseauEnnemi o-- EtatEnnemi : possède 
+VaisseauEnnemi o-- Entite : possède
+VaisseauEnnemi ..> Tir : génère
+Player ..> Tir : génère
+
+' Utilisation des ressources graphiques
+VaisseauEnnemi ..> Sprite : utilise
+Player ..> Sprite : utilise
+@enduml
